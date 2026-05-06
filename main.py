@@ -3,6 +3,7 @@ import subprocess
 import re
 import json
 import sys
+from datetime import datetime
 
 def check_git_installed():
     """检查系统是否安装了 Git"""
@@ -52,6 +53,27 @@ def get_smart_info(host_map):
 
     return None, None
 
+def get_file_icon(filename):
+    """根据文件扩展名返回对应的 Emoji 图标"""
+    ext = os.path.splitext(filename)[1].lower()
+    mapping = {
+        # 代码
+        '.py': '💻', '.js': '💻', '.ts': '💻', '.c': '💻', '.cpp': '💻', '.h': '💻', 
+        '.java': '💻', '.go': '💻', '.rs': '💻', '.php': '💻', '.rb': '💻',
+        # 文档
+        '.md': '📄', '.txt': '📄', '.pdf': '📄', '.doc': '📄', '.docx': '📄',
+        # 图片
+        '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️', '.gif': '🖼️', '.svg': '🖼️', 
+        '.webp': '🖼️', '.ico': '🖼️',
+        # 配置
+        '.json': '⚙️', '.yaml': '⚙️', '.yml': '⚙️', '.toml': '⚙️', '.xml': '⚙️',
+        # 脚本
+        '.sh': '📜', '.bat': '📜', '.ps1': '📜',
+        # 压缩包
+        '.zip': '📦', '.tar': '📦', '.gz': '📦', '.7z': '📦', '.rar': '📦'
+    }
+    return mapping.get(ext, '📝')
+
 def main():
     # --- 1. 环境自检 ---
     if not check_git_installed():
@@ -79,7 +101,7 @@ def main():
         user = input("请输入用户名: ").strip()
         repo = input("请输入仓库名: ").strip()
 
-    # --- 4. 文件提取与生成 ---
+    # --- 4. 文件提取与分类 ---
     files_str = run_command(["git", "ls-files"])
     if not files_str:
         print("📭 仓库中没有被追踪的文件。")
@@ -88,17 +110,41 @@ def main():
     files = files_str.splitlines()
     base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
     
-    md_content = [f"# {repo} Raw Links (Branch: {branch})\n"]
+    # 按照文件夹对文件进行分组
+    grouped_files = {}
     for f in files:
         if f.startswith("."): continue
-        md_content.append(f"- [{f}]({base_url}{f})")
+        
+        parts = f.split('/')
+        folder = '/'.join(parts[:-1]) if len(parts) > 1 else "Root"
+        
+        if folder not in grouped_files:
+            grouped_files[folder] = []
+        grouped_files[folder].append(f)
 
-    # --- 5. 保存文件 ---
-    # 确保脚本目录下的 links 文件夹存在
+    # --- 5. 构建 Markdown 内容 ---
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    md_content = [f"# 📦 {repo} Raw Links\n"]
+    md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`\n")
+    md_content.append("---")
+
+    # 文件夹排序：Root 放在最前面，其他按字母顺序
+    sorted_folders = sorted(grouped_files.keys(), key=lambda x: (x != "Root", x))
+
+    for folder in sorted_folders:
+        md_content.append(f"\n## 📂 {folder}")
+        for f in grouped_files[folder]:
+            filename = os.path.basename(f)
+            icon = get_file_icon(filename)
+            url = f"{base_url}{f}"
+            # 格式修改：文件名 (图标)
+            # 紧接着下方显示 URL
+            md_content.append(f"- {icon} **{filename}**")
+            md_content.append(f"  `{url}`")
+
+    # --- 6. 保存文件 ---
     links_dir = os.path.join(script_dir, "links")
     os.makedirs(links_dir, exist_ok=True)
-
-    # 文件名包含仓库名以防覆盖
     output_file = os.path.join(links_dir, f"{repo}_RAW_LINKS.md")
     
     with open(output_file, "w", encoding="utf-8") as f:
@@ -107,6 +153,9 @@ def main():
     print(f"\n✨ 生成成功！")
     print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
     print(f"📄 文件已保存至: {output_file}")
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
