@@ -128,12 +128,13 @@ def main():
     md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`\n")
     md_content.append("---")
 
-    # 文件夹排序：Root 放在最前面，其他按字母顺序
-    sorted_folders = sorted(grouped_files.keys(), key=lambda x: (x != "Root", x))
+    # 文件夹排序：Root 放在最前面，其他按字母顺序 (忽略大小写)
+    sorted_folders = sorted(grouped_files.keys(), key=lambda x: (x != "Root", x.lower()))
 
     for folder in sorted_folders:
         md_content.append(f"\n## 📂 {folder}")
-        for f in grouped_files[folder]:
+        # 对该文件夹下的文件进行排序 (忽略大小写)
+        for f in sorted(grouped_files[folder], key=lambda x: os.path.basename(x).lower()):
             filename = os.path.basename(f)
             icon = get_file_icon(filename)
             url = f"{base_url}{f}"
