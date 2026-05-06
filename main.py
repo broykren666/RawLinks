@@ -151,13 +151,10 @@ def main():
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(md_content))
 
-    print(f"\n✨ 生成成功！")
+    print(f"\n✨ 生成成功！\n")
     print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
     print(f"🔗 生成链接: {len(files)}")
     print(f"📄 输出目录: {output_file}")
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
