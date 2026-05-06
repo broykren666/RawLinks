@@ -86,7 +86,7 @@ def main():
         return
     
     files = files_str.splitlines()
-    base_url = f"https://githubusercontent.com{user}/{repo}/refs/heads/{branch}/"
+    base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
     
     md_content = [f"# {repo} Raw Links (Branch: {branch})\n"]
     for f in files:
