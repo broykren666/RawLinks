@@ -153,7 +153,8 @@ def main():
 
     print(f"\n✨ 生成成功！")
     print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
-    print(f"📄 文件已保存至: {output_file}")
+    print(f"🔗 生成链接: {len(files)}")
+    print(f"📄 输出目录: {output_file}")
 
 if __name__ == "__main__":
     main()
