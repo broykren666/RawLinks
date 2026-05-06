@@ -1,6 +1,6 @@
 # 📦 RawLinks
 
-**RawLinks** 是一个极简且强大的工具脚本，旨在自动识别本地 Git 仓库，并生成一份包含该仓库所有文件 **GitHub Raw 链接** 的 Markdown 文档。
+自动识别本地 Git 仓库，并生成一份包含该仓库所有文件 **GitHub Raw 链接** 的 Markdown 文档。
 
 它不仅能自动分类文件夹，还能根据文件类型匹配精美的图标，非常适合用于分享资源、整理脚本清单或文档索引。
 
@@ -21,20 +21,26 @@
 ## 🚀 快速开始
 
 ### 1. 准备环境
+
 确保您的系统已安装：
+
 - **Python 3.x**
 - **Git** (已配置到环境变量)
 
 ### 2. 下载脚本
-将 `main.py` 和 `config.json` 放置在同一个目录下。
+
+重命名 `e.config.json` 为`config.json`，将 `main.py` 和 `config.json` 放置在同一个目录下。
 
 ### 3. 运行脚本
+
 在终端执行：
+
 ```bash
 python main.py
 ```
 
 ### 4. 操作步骤
+
 1. 输入本地 Git 项目的绝对路径（直接回车则表示当前目录）。
 2. 脚本将自动识别信息。如果识别失败，会提示手动输入用户名和仓库名。
 3. 检查生成的链接数量和输出路径。
@@ -46,17 +52,20 @@ python main.py
 通过修改同目录下的 `config.json`，您可以完全掌控脚本的行为：
 
 ### 1. 过滤规则 (`filters`)
+
 - `ignore_dirs`: 要跳过的目录名（如 `dist`, `build`）。
 - `ignore_files`: 要跳过的特定文件名（如 `.DS_Store`）。
 - `ignore_exts`: 要跳过的文件后缀（如 `.exe`, `.pyc`）。
 - `include_dot_files`: 默认跳过所有 `.` 开头的文件，除非其路径包含在此名单中（如 `.github`）。
 
 ### 2. 图标映射 (`icons`)
+
 - `full_name`: 针对特定文件名的精确匹配（优先级最高）。
 - `extension`: 针对文件后缀的匹配。
 - `default`: 未识别类型时的默认图标。
 
 ### 3. 主机映射 (`host_map`)
+
 用于处理复杂的 SSH 别名。如果您在 `.gitconfig` 中配置了非标准 Host，可以在此建立对应关系。
 
 ---
@@ -82,7 +91,6 @@ python main.py
 # 📦 MyRepo Raw Links
 > **User**: `username` | **Branch**: `main` | **Generated**: `2023-10-27 10:30:00`
 
----
 ## 📂 Root
 - 📖 **README.md**
   `https://raw.githubusercontent.com/user/repo/refs/heads/main/README.md`
