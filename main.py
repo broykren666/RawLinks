@@ -2,6 +2,16 @@ import os
 import subprocess
 import re
 import json
+import sys
+
+def check_git_installed():
+    """检查系统是否安装了 Git"""
+    try:
+        # 尝试运行 git --version
+        subprocess.check_output(["git", "--version"], stderr=subprocess.STDOUT)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
 
 def run_command(cmd):
     try:
@@ -10,13 +20,11 @@ def run_command(cmd):
         return None
 
 def load_host_map(script_dir):
-    """读取 host_user.js 并生成映射字典"""
     js_path = os.path.join(script_dir, "host_user.js")
     host_map = {}
     if os.path.exists(js_path):
         try:
             with open(js_path, "r", encoding="utf-8") as f:
-                # 假设 JS 文件内容是纯 JSON 数组
                 data = json.load(f)
                 host_map = {item["host"]: item["user"] for item in data}
         except Exception as e:
@@ -24,25 +32,20 @@ def load_host_map(script_dir):
     return host_map
 
 def get_smart_info(host_map):
-    """解析远程仓库并自动替换 Host 别名"""
     remote_url = run_command(["git", "remote", "get-url", "origin"])
     if not remote_url:
         return None, None
 
-    # 1. 尝试匹配 SSH 格式: git@host_alias:user/repo.git
+    # 解析 SSH 别名逻辑
     ssh_match = re.search(r"git@(.+?):(.+?)/(.+?)(\.git)?$", remote_url)
     if ssh_match:
-        host_part = ssh_match.group(1)
-        user_part = ssh_match.group(2)
-        repo_part = ssh_match.group(3).replace(".git", "")
-        
-        # 如果 host_part 在我们的映射表里，执行替换
+        host_part, user_part, repo_part = ssh_match.group(1), ssh_match.group(2), ssh_match.group(3)
+        repo_part = repo_part.replace(".git", "")
         if host_part in host_map:
-            print(f"🔄 检测到 SSH 别名 [{host_part}]，已自动映射为用户: {host_map[host_part]}")
             return host_map[host_part], repo_part
         return user_part, repo_part
 
-    # 2. 尝试匹配 HTTPS 格式: https://github.com
+    # 解析 HTTPS 逻辑
     http_match = re.search(r"github\.com/(.+?)/(.+?)(\.git)?$", remote_url)
     if http_match:
         return http_match.group(1), http_match.group(2).replace(".git", "")
@@ -50,38 +53,53 @@ def get_smart_info(host_map):
     return None, None
 
 def main():
-    # 获取脚本所在目录，用于定位 host_user.js
+    # --- 1. 环境自检 ---
+    if not check_git_installed():
+        print("❌ 错误：未检测到 Git 环境。")
+        print("👉 请先安装 Git 并配置到环境变量中。")
+        print("🔗 下载地址: https://git-scm.com")
+        sys.exit(1)
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     host_map = load_host_map(script_dir)
 
+    # --- 2. 路径识别 ---
     path = input("请输入 Git 项目路径 (回车表示当前目录): ").strip() or "."
     if not os.path.exists(os.path.join(path, ".git")):
-        print("❌ 错误：无效的 Git 仓库")
+        print("❌ 错误：该目录不是 Git 仓库或路径不存在。")
         return
     os.chdir(path)
 
-    # 自动获取信息
+    # --- 3. 自动抓取信息 ---
     branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"]) or "main"
     user, repo = get_smart_info(host_map)
 
     if not user or not repo:
-        print("❌ 无法自动获取用户信息，请手动检查远程仓库配置")
-        user = input("请输入用户名: ")
-        repo = input("请输入仓库名: ")
+        print("💡 无法从 remote 自动获取信息。")
+        user = input("请输入用户名: ").strip()
+        repo = input("请输入仓库名: ").strip()
 
-    # 获取文件并生成链接
-    files = run_command(["git", "ls-files"]).splitlines()
+    # --- 4. 文件提取与生成 ---
+    files_str = run_command(["git", "ls-files"])
+    if not files_str:
+        print("📭 仓库中没有被追踪的文件。")
+        return
+    
+    files = files_str.splitlines()
     base_url = f"https://githubusercontent.com{user}/{repo}/refs/heads/{branch}/"
     
-    md_list = [f"# {repo} Raw Links\n"]
-    for f_path in files:
-        if f_path.startswith("."): continue
-        md_list.append(f"- [{f_path}]({base_url}{f_path})")
+    md_content = [f"# {repo} Raw Links (Branch: {branch})\n"]
+    for f in files:
+        if f.startswith("."): continue
+        md_content.append(f"- [{f}]({base_url}{f})")
 
-    with open("RAW_LINKS.md", "w", encoding="utf-8") as f:
-        f.write("\n".join(md_list))
+    output_file = "RAW_LINKS.md"
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(md_content))
 
-    print(f"\n✅ 成功！已使用用户 [{user}] 生成 {len(md_list)-1} 个链接。")
+    print(f"\n✨ 生成成功！")
+    print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
+    print(f"📄 文件已保存至: {os.path.abspath(output_file)}")
 
 if __name__ == "__main__":
     main()
