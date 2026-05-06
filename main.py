@@ -54,25 +54,59 @@ def get_smart_info(host_map):
     return None, None
 
 def get_file_icon(filename):
-    """根据文件扩展名返回对应的 Emoji 图标"""
-    ext = os.path.splitext(filename)[1].lower()
-    mapping = {
-        # 代码
-        '.py': '💻', '.js': '💻', '.ts': '💻', '.c': '💻', '.cpp': '💻', '.h': '💻', 
-        '.java': '💻', '.go': '💻', '.rs': '💻', '.php': '💻', '.rb': '💻',
+    """根据文件名或扩展名返回对应的 Emoji 图标"""
+    fn_lower = filename.lower()
+
+    # 1. 全名匹配 (优先级最高)
+    full_name_mapping = {
+        'dockerfile': '🐳',
+        'docker-compose.yml': '🐳',
+        'docker-compose.yaml': '🐳',
+        'package.json': '📦',
+        'package-lock.json': '🔒',
+        'yarn.lock': '🔒',
+        'pnpm-lock.yaml': '🔒',
+        'composer.json': '📦',
+        'composer.lock': '🔒',
+        'requirements.txt': '📋',
+        'makefile': '🛠️',
+        'license': '⚖️',
+        'readme.md': '📖',
+        '.gitignore': '🚫',
+        '.env': '🔑',
+        '.editorconfig': '⚙️',
+        '.prettierrc': '✨'
+    }
+    if fn_lower in full_name_mapping:
+        return full_name_mapping[fn_lower]
+
+    # 2. 扩展名匹配
+    ext = os.path.splitext(fn_lower)[1]
+    ext_mapping = {
+        # 编程语言
+        '.py': '🐍', '.js': '🟨', '.ts': '🟦', '.go': '🐹', '.rs': '🦀', 
+        '.c': '🛠️', '.cpp': '🛠️', '.h': '🛠️', '.hpp': '🛠️', '.java': '☕', 
+        '.php': '🐘', '.rb': '💎', '.swift': '🍎', '.kt': '🎯', '.dart': '🎯',
+        '.sh': '📜', '.bat': '📜', '.ps1': '📜', '.sql': '🗄️', '.lua': '🌙',
+        # Web
+        '.html': '🌐', '.htm': '🌐', '.css': '🎨', '.scss': '🎨', '.sass': '🎨', '.less': '🎨',
+        # 数据/配置
+        '.json': '⚙️', '.yaml': '⚙️', '.yml': '⚙️', '.toml': '⚙️', '.xml': '⚙️',
+        '.ini': '⚙️', '.conf': '⚙️', '.csv': '📊', '.xlsx': '📊', '.xls': '📊',
         # 文档
-        '.md': '📄', '.txt': '📄', '.pdf': '📄', '.doc': '📄', '.docx': '📄',
+        '.md': '📝', '.txt': '📄', '.pdf': '📕', '.doc': '📘', '.docx': '📘',
         # 图片
         '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️', '.gif': '🖼️', '.svg': '🖼️', 
-        '.webp': '🖼️', '.ico': '🖼️',
-        # 配置
-        '.json': '⚙️', '.yaml': '⚙️', '.yml': '⚙️', '.toml': '⚙️', '.xml': '⚙️',
-        # 脚本
-        '.sh': '📜', '.bat': '📜', '.ps1': '📜',
+        '.webp': '🖼️', '.ico': '🖼️', '.psd': '🎨', '.ai': '🎨',
+        # 媒体
+        '.mp3': '🎵', '.wav': '🎵', '.flac': '🎵', '.mp4': '🎬', '.avi': '🎬', '.mov': '🎬',
         # 压缩包
-        '.zip': '📦', '.tar': '📦', '.gz': '📦', '.7z': '📦', '.rar': '📦'
+        '.zip': '📦', '.tar': '📦', '.gz': '📦', '.7z': '📦', '.rar': '📦',
+        # 执行文件
+        '.exe': '🚀', '.msi': '🚀', '.bin': '🚀', '.apk': '📱'
     }
-    return mapping.get(ext, '📝')
+
+    return ext_mapping.get(ext, '📄')
 
 def main():
     # --- 1. 环境自检 ---
