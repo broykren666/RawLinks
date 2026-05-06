@@ -146,7 +146,7 @@ def main():
     # --- 6. 保存文件 ---
     links_dir = os.path.join(script_dir, "links")
     os.makedirs(links_dir, exist_ok=True)
-    output_file = os.path.join(links_dir, f"{repo}_RAW_LINKS.md")
+    output_file = os.path.join(links_dir, f"{repo}.md")
     
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(md_content))
