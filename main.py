@@ -93,13 +93,20 @@ def main():
         if f.startswith("."): continue
         md_content.append(f"- [{f}]({base_url}{f})")
 
-    output_file = "RAW_LINKS.md"
+    # --- 5. 保存文件 ---
+    # 确保脚本目录下的 links 文件夹存在
+    links_dir = os.path.join(script_dir, "links")
+    os.makedirs(links_dir, exist_ok=True)
+
+    # 文件名包含仓库名以防覆盖
+    output_file = os.path.join(links_dir, f"{repo}_RAW_LINKS.md")
+    
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(md_content))
 
     print(f"\n✨ 生成成功！")
     print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
-    print(f"📄 文件已保存至: {os.path.abspath(output_file)}")
+    print(f"📄 文件已保存至: {output_file}")
 
 if __name__ == "__main__":
     main()
