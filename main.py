@@ -57,8 +57,7 @@ def load_config(script_dir):
             print(f"⚠️ 读取 config.json 失败: {e}，将使用默认配置。")
     return default_config
 
-def get_smart_info(config):
-    remote_url = run_command(["git", "remote", "get-url", "origin"])
+def get_smart_info(remote_url, config):
     if not remote_url:
         return None, None, None, None
 
@@ -157,7 +156,15 @@ def main():
 
     # --- 信息抓取 ---
     branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"]) or "main"
-    user, repo, platform, domain = get_smart_info(config)
+    
+    # 检查远端仓库关联情况
+    remote_url = run_command(["git", "remote", "get-url", "origin"])
+    if not remote_url:
+        print("❌ 错误：该仓库尚未关联远端仓库 (origin)。")
+        print("💡 请先使用 `git remote add origin <url>` 关联远端仓库后再运行此脚本。")
+        return
+
+    user, repo, platform, domain = get_smart_info(remote_url, config)
 
     # 平台识别回退逻辑
     if not platform:
