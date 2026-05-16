@@ -4,6 +4,7 @@ import re
 import json
 import sys
 from datetime import datetime
+from urllib.parse import quote
 
 def check_git_installed():
     """检查系统是否安装了 Git"""
@@ -164,14 +165,52 @@ def main():
         return
     os.chdir(path)
 
-    # --- 信息抓取 ---
-    branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"]) or "main"
+    # --- 分支识别与选择 ---
+    branches_str = run_command(["git", "branch", "--format=%(refname:short)"])
+    branches = branches_str.splitlines() if branches_str else []
+    current_branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"]) or "main"
     
-    # 检查远端仓库关联情况
-    remote_url = run_command(["git", "remote", "get-url", "origin"])
-    if not remote_url:
-        print("❌ 错误：该仓库尚未关联远端仓库 (origin)。")
+    if len(branches) > 1:
+        print("\n🌿 可用分支:")
+        for i, b in enumerate(branches, 1):
+            mark = "*" if b == current_branch else " "
+            print(f"  {i}. {mark} {b}")
+        branch_choice = input(f"请选择目标分支 (序号，直接回车使用 '{current_branch}'): ").strip()
+        if branch_choice.isdigit() and 1 <= int(branch_choice) <= len(branches):
+            branch = branches[int(branch_choice) - 1]
+        else:
+            branch = current_branch
+    else:
+        branch = current_branch
+
+    # --- 远端仓库识别 ---
+    remotes_str = run_command(["git", "remote"])
+    remotes = remotes_str.splitlines() if remotes_str else []
+    
+    if not remotes:
+        print("❌ 错误：该仓库尚未关联任何远端仓库。")
         print("💡 请先使用 `git remote add origin <url>` 关联远端仓库后再运行此脚本。")
+        return
+
+    if len(remotes) > 1:
+        print("\n🌍 可用远端:")
+        default_remote_idx = 1
+        for i, r in enumerate(remotes, 1):
+            if r == "origin": default_remote_idx = i
+            print(f"  {i}. {r}")
+        
+        default_name = remotes[default_remote_idx - 1]
+        remote_choice = input(f"请选择要使用的远端 (序号，直接回车使用 '{default_name}'): ").strip()
+        if remote_choice.isdigit() and 1 <= int(remote_choice) <= len(remotes):
+            remote_name = remotes[int(remote_choice) - 1]
+        else:
+            remote_name = default_name
+    else:
+        remote_name = remotes[0]
+    
+    remote_url = run_command(["git", "remote", "get-url", remote_name])
+    if not remote_url:
+        print(f"❌ 错误：无法获取远端 '{remote_name}' 的 URL。")
         return
 
     user, repo, platform, domain = get_smart_info(remote_url, config)
@@ -244,7 +283,9 @@ def main():
         for f in sorted(grouped_files[folder], key=lambda x: os.path.basename(x).lower()):
             filename = os.path.basename(f)
             icon = get_file_icon(filename, config)
-            url = f"{base_url}{f}"
+            # 对路径进行 URL 编码，保留斜杠
+            safe_path = quote(f, safe='/')
+            url = f"{base_url}{safe_path}"
             md_content.append(f"- {icon} **{filename}**")
             md_content.append(f"  ```text\n  {url}\n  ```")
 
