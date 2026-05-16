@@ -23,16 +23,17 @@ def run_command(cmd):
         return None
 
 def load_config(script_dir):
-    """加载配置文件，若不存在则返回默认配置"""
+    """加载配置文件，若不存在则生成并返回默认配置"""
     config_path = os.path.join(script_dir, "config.json")
-    # 默认配置 (兜底)
+    
+    # 使用你优化后的过滤规则作为默认配置
     default_config = {
         "host_map": [],
         "filters": {
-            "ignore_dirs": [".git", "node_modules", "__pycache__", "venv"],
-            "ignore_files": [".DS_Store"],
-            "ignore_exts": [".pyc"],
-            "include_dot_files": [".gitignore", ".github"]
+            "ignore_dirs": ["node_modules", "__pycache__", "dist", "build", "target", ".git", ".idea", ".vscode", "venv", ".venv", "wheels", ".wrangler"],
+            "ignore_files": [".DS_Store", "Thumbs.db", "desktop.ini", ".python-version", "uv.lock", "package-lock.json", ".env", ".dev.vars"],
+            "ignore_exts": [".pyc", ".pyo", ".exe", ".dll", ".obj", ".bin"],
+            "include_dot_files": [".github", ".env.example", ".editorconfig", ".prettierrc"]
         },
         "icons": {
             "full_name": {"readme.md": "📖"},
@@ -55,6 +56,15 @@ def load_config(script_dir):
                 return default_config
         except Exception as e:
             print(f"⚠️ 读取 config.json 失败: {e}，将使用默认配置。")
+    else:
+        # 自动生成配置文件
+        try:
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(default_config, f, indent=4, ensure_ascii=False)
+            print(f"📝 已自动生成默认配置文件: {config_path}")
+        except Exception as e:
+            print(f"⚠️ 自动生成配置文件失败: {e}")
+            
     return default_config
 
 def get_smart_info(remote_url, config):
