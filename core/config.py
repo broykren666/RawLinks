@@ -5,7 +5,10 @@ class ConfigManager:
     def __init__(self, script_dir):
         self.config_path = os.path.join(script_dir, "config.json")
         self.default_config = {
-            "host_map": [],
+            "host_map": [
+                {"host": "dudu", "user": "xinjieming", "domain": "github.com"},
+                {"host": "yoyo", "user": "donghaiyan", "domain": "gitlab.com"}
+            ],
             "filters": {
                 "ignore_dirs": ["node_modules", "__pycache__", "dist", "build", "target", ".git", ".idea", ".vscode", "venv", ".venv", "wheels", ".wrangler"],
                 "ignore_files": [".DS_Store", "Thumbs.db", "desktop.ini", ".python-version", "uv.lock", "package-lock.json", ".env", ".dev.vars"],

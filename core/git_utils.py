@@ -25,8 +25,6 @@ def get_git_remotes():
 
 def parse_remote_info(remote_url, host_map_list):
     """解析远端 URL 提取用户名、仓库名、平台及域名"""
-    host_map = {item["host"]: item["user"] for item in host_map_list}
-    
     # 兼容 SSH 和 HTTPS 格式
     ssh_pattern = r"git@([^:]+):([^/]+)/(.+?)(\.git)?$"
     http_pattern = r"https?://([^/]+)/([^/]+)/(.+?)(\.git)?$"
@@ -40,17 +38,24 @@ def parse_remote_info(remote_url, host_map_list):
     elif http_match:
         domain, user, repo = http_match.group(1), http_match.group(2), http_match.group(3)
         
+    mapped_domain = None
     if domain and user and repo:
         repo = repo.replace(".git", "")
-        # 处理别名映射
-        if domain in host_map and host_map[domain]:
-            user = host_map[domain]
-            
-        platform = None
-        d_lower = domain.lower()
-        if "github.com" in d_lower: platform = "github"
-        elif "gitlab.com" in d_lower: platform = "gitlab"
-        elif "gitee.com" in d_lower: platform = "gitee"
         
-        return user, repo, platform, domain
-    return None, None, None, None
+        # 查找 host_map 映射（优先根据 host 匹配）
+        for item in host_map_list:
+            if item.get("host") == domain:
+                user = item.get("user", user)
+                mapped_domain = item.get("domain") # 获取映射后的域名
+                break
+            
+        # 平台识别
+        platform = None
+        # 优先根据映射后的域名识别，否则根据原始域名
+        check_domain = (mapped_domain or domain or "").lower()
+        if "github.com" in check_domain: platform = "github"
+        elif "gitlab.com" in check_domain: platform = "gitlab"
+        elif "gitee.com" in check_domain: platform = "gitee"
+        
+        return user, repo, platform, domain, mapped_domain
+    return None, None, None, None, None

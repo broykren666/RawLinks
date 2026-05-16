@@ -64,7 +64,7 @@ def main():
     ui.success(f"已选择远端: {remote_name} ({remote_url})")
 
     # 3. 平台信息提取
-    user, repo, platform, domain = parse_remote_info(remote_url, config.get("host_map", []))
+    user, repo, platform, domain, mapped_domain = parse_remote_info(remote_url, config.get("host_map", []))
     
     if not platform:
         ui.warning("无法自动判断平台（GitHub/GitLab/Gitee）。")
@@ -78,12 +78,16 @@ def main():
 
     # 4. 构建 Base URL
     if platform == "github":
+        # GitHub Raw 始终使用固定的 raw 域名
         base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
     elif platform == "gitlab":
-        gl_host = domain if domain else "gitlab.com"
+        # 优先级：1. 映射后的域名 -> 2. 原始域名 -> 3. 官方域名
+        gl_host = mapped_domain or domain or "gitlab.com"
         base_url = f"https://{gl_host}/{user}/{repo}/-/raw/{branch}/"
-    else: # gitee
-        base_url = f"https://gitee.com/{user}/{repo}/raw/{branch}/"
+    elif platform == "gitee":
+        # 优先级：1. 映射后的域名 -> 2. 原始域名 -> 3. 官方域名
+        gt_host = mapped_domain or domain or "gitee.com"
+        base_url = f"https://{gt_host}/{user}/{repo}/raw/{branch}/"
 
     # --- 文件处理 ---
     ui.section("文件扫描与生成")
