@@ -214,9 +214,9 @@ def main():
 
     # --- 构建 Markdown ---
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    md_content = [f"# 📦 {repo} Raw Links\n"]
-    md_content.append(f"> **Platform**: `{platform.capitalize()}` | **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`")
-    md_content.append(f"> **Summary**: | **Files**: `{total_files}` | **Links**: `{processed_count}` | **Filtered**: `{total_files - processed_count}`\n")
+    md_content = [f"# 📦 {repo}\n"]
+    md_content.append(f"> **Generated**: `{now_str}` | **Files**: `{total_files}` | **Links**: `{processed_count}` | **Filtered**: `{total_files - processed_count}`")
+    md_content.append(f"> **Platform**: `{platform.capitalize()}` | **User**: `{user}` | **Branch**: `{branch}`\n")
     
     md_content.append("---")
 
