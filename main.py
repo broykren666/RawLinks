@@ -110,6 +110,8 @@ def main():
         if folder not in grouped_files: grouped_files[folder] = []
         grouped_files[folder].append(f)
 
+    ui.info(f"总文件数: {total_files} | 生成链接: {processed_count} | 过滤数量: {total_files - processed_count}")
+
     # --- 生成 Markdown ---
     md_content = processor.build_markdown(
         repo, user, branch, platform, total_files, 
