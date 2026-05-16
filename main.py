@@ -60,26 +60,40 @@ def load_config(script_dir):
 def get_smart_info(config):
     remote_url = run_command(["git", "remote", "get-url", "origin"])
     if not remote_url:
-        return None, None
+        return None, None, None, None
 
     # 从配置中获取 host_map
     host_map = {item["host"]: item["user"] for item in config.get("host_map", [])}
 
-    # 解析 SSH 别名逻辑
-    ssh_match = re.search(r"git@(.+?):(.+?)/(.+?)(\.git)?$", remote_url)
+    # 尝试匹配多种格式 (SSH 和 HTTPS)
+    # Pattern 1: SSH (git@domain:user/repo.git)
+    ssh_match = re.search(r"git@([^:]+):([^/]+)/(.+?)(\.git)?$", remote_url)
+    # Pattern 2: HTTPS (https://domain/user/repo.git)
+    http_match = re.search(r"https?://([^/]+)/([^/]+)/(.+?)(\.git)?$", remote_url)
+    
+    domain, user, repo = None, None, None
+    
     if ssh_match:
-        host_part, user_part, repo_part = ssh_match.group(1), ssh_match.group(2), ssh_match.group(3)
-        repo_part = repo_part.replace(".git", "")
-        if host_part in host_map and host_map[host_part]:
-            return host_map[host_part], repo_part
-        return user_part, repo_part
+        domain, user, repo = ssh_match.group(1), ssh_match.group(2), ssh_match.group(3)
+    elif http_match:
+        domain, user, repo = http_match.group(1), http_match.group(2), http_match.group(3)
+        
+    if domain and user and repo:
+        repo = repo.replace(".git", "")
+        # 处理 SSH 别名映射
+        if domain in host_map and host_map[domain]:
+            user = host_map[domain]
+            
+        # 平台识别
+        platform = None
+        d_lower = domain.lower()
+        if "github.com" in d_lower: platform = "github"
+        elif "gitlab.com" in d_lower: platform = "gitlab"
+        elif "gitee.com" in d_lower: platform = "gitee"
+        
+        return user, repo, platform, domain
 
-    # 解析 HTTPS 逻辑
-    http_match = re.search(r"github\.com/(.+?)/(.+?)(\.git)?$", remote_url)
-    if http_match:
-        return http_match.group(1), http_match.group(2).replace(".git", "")
-
-    return None, None
+    return None, None, None, None
 
 def should_skip(file_path, config):
     """智能过滤逻辑"""
@@ -143,12 +157,36 @@ def main():
 
     # --- 信息抓取 ---
     branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"]) or "main"
-    user, repo = get_smart_info(config)
+    user, repo, platform, domain = get_smart_info(config)
+
+    # 平台识别回退逻辑
+    if not platform:
+        print("💡 无法自动判断平台（GitHub/GitLab/Gitee）。")
+        choice = input("请选择平台 (1: GitHub, 2: GitLab, 3: Gitee) [默认: 1]: ").strip()
+        if choice == "2":
+            platform = "gitlab"
+        elif choice == "3":
+            platform = "gitee"
+        else:
+            platform = "github"
 
     if not user or not repo:
-        print("💡 无法自动获取信息。")
+        print("💡 无法自动获取用户或仓库信息。")
         user = user or input("请输入用户名: ").strip()
         repo = repo or input("请输入仓库名: ").strip()
+
+    # --- 构建 Base URL ---
+    if platform == "github":
+        base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
+    elif platform == "gitlab":
+        # 优先使用检测到的域名，支持私有部署
+        gl_host = domain if domain else "gitlab.com"
+        base_url = f"https://{gl_host}/{user}/{repo}/-/raw/{branch}/"
+    elif platform == "gitee":
+        base_url = f"https://gitee.com/{user}/{repo}/raw/{branch}/"
+    else:
+        # 兜底 GitHub
+        base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
 
     # --- 文件提取与分类 ---
     files_str = run_command(["git", "ls-files"])
@@ -157,7 +195,6 @@ def main():
         return
     
     raw_files = files_str.splitlines()
-    base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
     
     grouped_files = {}
     total_files = len(raw_files)
@@ -178,7 +215,7 @@ def main():
     # --- 构建 Markdown ---
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     md_content = [f"# 📦 {repo} Raw Links\n"]
-    md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`")
+    md_content.append(f"> **Platform**: `{platform.capitalize()}` | **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`")
     md_content.append(f"> **Summary**: | **Files**: `{total_files}` | **Links**: `{processed_count}` | **Filtered**: `{total_files - processed_count}`\n")
     
     md_content.append("---")
@@ -206,7 +243,7 @@ def main():
         f.write("\n".join(md_content))
 
     print(f"\n✨ 生成成功！\n")
-    print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
+    print(f"🌍 平台: {platform.capitalize()} | 👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
     print(f"🔗 生成链接: {processed_count} (过滤掉 {total_files - processed_count} 个文件)")
     print(f"📄 输出文件: {output_file}")
 
