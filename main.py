@@ -15,8 +15,11 @@ def check_git_installed():
 
 def run_command(cmd):
     try:
-        return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
-    except:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+    except Exception:
         return None
 
 def load_config(script_dir):
@@ -157,6 +160,7 @@ def main():
     base_url = f"https://raw.githubusercontent.com/{user}/{repo}/refs/heads/{branch}/"
     
     grouped_files = {}
+    total_files = len(raw_files)
     processed_count = 0
     
     for f in raw_files:
@@ -175,9 +179,24 @@ def main():
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     md_content = [f"# 📦 {repo} Raw Links\n"]
     md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`\n")
+    
+    # 添加摘要信息
+    md_content.append("## 📊 Summary")
+    md_content.append(f"- **Total Tracked Files**: {total_files}")
+    md_content.append(f"- **Generated Links**: {processed_count}")
+    md_content.append(f"- **Filtered Files**: {total_files - processed_count}\n")
+    
     md_content.append("---")
 
     sorted_folders = sorted(grouped_files.keys(), key=lambda x: (x != "Root", x.lower()))
+    
+    # 添加目录索引 (TOC)
+    md_content.append("## 📌 Table of Contents")
+    for folder in sorted_folders:
+        anchor = folder.lower().replace(" ", "-").replace("/", "")
+        md_content.append(f"- [📂 {folder}](#- {anchor})")
+    md_content.append("\n---")
+
     for folder in sorted_folders:
         md_content.append(f"\n## 📂 {folder}")
         for f in sorted(grouped_files[folder], key=lambda x: os.path.basename(x).lower()):
@@ -190,15 +209,29 @@ def main():
     # --- 保存文件 ---
     links_dir = os.path.join(script_dir, "links")
     os.makedirs(links_dir, exist_ok=True)
-    output_file = os.path.join(links_dir, f"{repo}.md")
+    
+    # 防止冲突：使用 repo_branch 命名
+    safe_branch = branch.replace("/", "_").replace("\\", "_")
+    output_file = os.path.join(links_dir, f"{repo}_{safe_branch}.md")
     
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(md_content))
 
     print(f"\n✨ 生成成功！\n")
     print(f"👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
-    print(f"🔗 生成链接: {processed_count}")
-    print(f"📄 输出目录: {output_file}")
+    print(f"🔗 生成链接: {processed_count} (过滤掉 {total_files - processed_count} 个文件)")
+    print(f"📄 输出文件: {output_file}")
+
+    # 自动打开目录
+    try:
+        if sys.platform == "win32":
+            os.startfile(links_dir)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", links_dir])
+        else:
+            subprocess.run(["xdg-open", links_dir])
+    except:
+        pass
 
 if __name__ == "__main__":
     main()
