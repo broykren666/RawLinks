@@ -185,7 +185,7 @@ def main():
             icon = get_file_icon(filename, config)
             url = f"{base_url}{f}"
             md_content.append(f"- {icon} **{filename}**")
-            md_content.append(f"  `{url}`")
+            md_content.append(f"  ```\n  {url}\n  ```")
 
     # --- 保存文件 ---
     links_dir = os.path.join(script_dir, "links")
