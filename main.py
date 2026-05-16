@@ -178,24 +178,12 @@ def main():
     # --- 构建 Markdown ---
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     md_content = [f"# 📦 {repo} Raw Links\n"]
-    md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`\n")
-    
-    # 添加摘要信息
-    md_content.append("## 📊 Summary")
-    md_content.append(f"- **Total Tracked Files**: {total_files}")
-    md_content.append(f"- **Generated Links**: {processed_count}")
-    md_content.append(f"- **Filtered Files**: {total_files - processed_count}\n")
+    md_content.append(f"> **User**: `{user}` | **Branch**: `{branch}` | **Generated**: `{now_str}`")
+    md_content.append(f"> **Summary**: | **Files**: `{total_files}` | **Links**: `{processed_count}` | **Filtered**: `{total_files - processed_count}`\n")
     
     md_content.append("---")
 
     sorted_folders = sorted(grouped_files.keys(), key=lambda x: (x != "Root", x.lower()))
-    
-    # 添加目录索引 (TOC)
-    md_content.append("## 📌 Table of Contents")
-    for folder in sorted_folders:
-        anchor = folder.lower().replace(" ", "-").replace("/", "")
-        md_content.append(f"- [📂 {folder}](#- {anchor})")
-    md_content.append("\n---")
 
     for folder in sorted_folders:
         md_content.append(f"\n## 📂 {folder}")
