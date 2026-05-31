@@ -25,23 +25,35 @@ def get_git_remotes():
 
 def parse_remote_info(remote_url, host_map_list):
     """解析远端 URL 提取用户名、仓库名、平台及域名"""
-    # 兼容 SSH 和 HTTPS 格式 (支持 git@host:user/repo.git 和 ssh://git@host/user/repo.git)
-    ssh_pattern = r"(?:ssh://)?git@([^:/]+)[:/]([^/]+)/(.+?)(\.git)?$"
-    http_pattern = r"https?://([^/]+)/([^/]+)/(.+?)(\.git)?$"
+    # 兼容 SSH 和 HTTPS 格式
+    # 1. SSH: [ssh://]git@host[:/]path/to/repo[.git]
+    # 2. HTTP: http[s]://host/path/to/repo[.git]
+    ssh_pattern = r"(?:ssh://)?git@([^:/]+)[:/](.+)$"
+    http_pattern = r"https?://([^/]+)/(.+)$"
     
     ssh_match = re.search(ssh_pattern, remote_url)
     http_match = re.search(http_pattern, remote_url)
     
-    domain, user, repo = None, None, None
+    domain, full_path = None, None
     if ssh_match:
-        domain, user, repo = ssh_match.group(1), ssh_match.group(2), ssh_match.group(3)
+        domain, full_path = ssh_match.group(1), ssh_match.group(2)
     elif http_match:
-        domain, user, repo = http_match.group(1), http_match.group(2), http_match.group(3)
+        domain, full_path = http_match.group(1), http_match.group(2)
         
-    mapped_domain = None
-    if domain and user and repo:
-        repo = repo.replace(".git", "")
+    if domain and full_path:
+        # 去掉末尾的 .git
+        full_path = re.sub(r"\.git$", "", full_path)
+        parts = full_path.split("/")
         
+        # 默认解析：最后一部分是 repo，前面的是 user/group
+        if len(parts) >= 2:
+            user = "/".join(parts[:-1])
+            repo = parts[-1]
+        else:
+            user = None
+            repo = parts[0]
+            
+        mapped_domain = None
         # 查找 host_map 映射（优先根据 host 匹配）
         for item in host_map_list:
             if item.get("host") == domain:
@@ -49,14 +61,16 @@ def parse_remote_info(remote_url, host_map_list):
                 mapped_domain = item.get("domain") # 获取映射后的域名
                 break
             
-        # 平台识别
-        platform = None
-        # 优先根据映射后的域名识别，否则根据原始域名
-        check_domain = (mapped_domain or domain or "").lower()
-        if "github.com" in check_domain: platform = "github"
-        elif "gitlab.com" in check_domain: platform = "gitlab"
-        elif "gitee.com" in check_domain: platform = "gitee"
-        elif "codeberg.org" in check_domain: platform = "codeberg"
-        
-        return user, repo, platform, domain, mapped_domain
+        if user and repo:
+            # 平台识别
+            platform = None
+            # 优先根据映射后的域名识别，否则根据原始域名
+            check_domain = (mapped_domain or domain or "").lower()
+            if "github.com" in check_domain: platform = "github"
+            elif "gitlab.com" in check_domain: platform = "gitlab"
+            elif "gitee.com" in check_domain: platform = "gitee"
+            elif "codeberg.org" in check_domain: platform = "codeberg"
+            
+            return user, repo, platform, domain, mapped_domain
+            
     return None, None, None, None, None
