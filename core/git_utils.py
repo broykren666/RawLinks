@@ -54,22 +54,26 @@ def parse_remote_info(remote_url, host_map_list):
             repo = parts[0]
             
         mapped_domain = None
+        mapped_platform = None
         # 查找 host_map 映射（优先根据 host 匹配）
         for item in host_map_list:
             if item.get("host") == domain:
                 user = item.get("user", user)
                 mapped_domain = item.get("domain") # 获取映射后的域名
+                mapped_platform = item.get("platform") # 获取映射后的平台
                 break
             
         if user and repo:
             # 平台识别
-            platform = None
-            # 优先根据映射后的域名识别，否则根据原始域名
-            check_domain = (mapped_domain or domain or "").lower()
-            if "github.com" in check_domain: platform = "github"
-            elif "gitlab.com" in check_domain: platform = "gitlab"
-            elif "gitee.com" in check_domain: platform = "gitee"
-            elif "codeberg.org" in check_domain: platform = "codeberg"
+            platform = mapped_platform # 优先使用映射中指定的平台
+            if not platform:
+                # 优先根据映射后的域名识别，否则根据原始域名
+                check_domain = (mapped_domain or domain or "").lower()
+                if "github.com" in check_domain: platform = "github"
+                elif "gitlab.com" in check_domain: platform = "gitlab"
+                elif "gitee.com" in check_domain: platform = "gitee"
+                elif "codeberg.org" in check_domain: platform = "codeberg"
+                elif "bitbucket.org" in check_domain: platform = "bitbucket"
             
             return user, repo, platform, domain, mapped_domain
             

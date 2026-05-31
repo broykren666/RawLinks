@@ -67,11 +67,12 @@ def main():
     user, repo, platform, domain, mapped_domain = parse_remote_info(remote_url, config.get("host_map", []))
     
     if not platform:
-        ui.warning("无法自动判断平台（GitHub/GitLab/Gitee/Codeberg）。")
-        choice = input("请选择平台 (1: GitHub, 2: GitLab, 3: Gitee, 4: Codeberg) [默认: 1]: ").strip()
+        ui.warning("无法自动判断平台（GitHub/GitLab/Gitee/Codeberg/Bitbucket）。")
+        choice = input("请选择平台 (1: GitHub, 2: GitLab, 3: Gitee, 4: Codeberg, 5: Bitbucket) [默认: 1]: ").strip()
         if choice == "2": platform = "gitlab"
         elif choice == "3": platform = "gitee"
         elif choice == "4": platform = "codeberg"
+        elif choice == "5": platform = "bitbucket"
         else: platform = "github"
 
     if not user or not repo:
@@ -95,6 +96,10 @@ def main():
         # Codeberg (Forgejo/Gitea) 格式
         cb_host = mapped_domain or domain or "codeberg.org"
         base_url = f"https://{cb_host}/{user}/{repo}/raw/branch/{branch}/"
+    elif platform == "bitbucket":
+        # Bitbucket 格式
+        bb_host = mapped_domain or domain or "bitbucket.org"
+        base_url = f"https://{bb_host}/{user}/{repo}/raw/{branch}/"
 
     # --- 文件处理 ---
     ui.section("文件扫描与生成")
