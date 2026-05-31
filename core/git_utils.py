@@ -25,8 +25,8 @@ def get_git_remotes():
 
 def parse_remote_info(remote_url, host_map_list):
     """解析远端 URL 提取用户名、仓库名、平台及域名"""
-    # 兼容 SSH 和 HTTPS 格式
-    ssh_pattern = r"git@([^:]+):([^/]+)/(.+?)(\.git)?$"
+    # 兼容 SSH 和 HTTPS 格式 (支持 git@host:user/repo.git 和 ssh://git@host/user/repo.git)
+    ssh_pattern = r"(?:ssh://)?git@([^:/]+)[:/]([^/]+)/(.+?)(\.git)?$"
     http_pattern = r"https?://([^/]+)/([^/]+)/(.+?)(\.git)?$"
     
     ssh_match = re.search(ssh_pattern, remote_url)
@@ -56,6 +56,7 @@ def parse_remote_info(remote_url, host_map_list):
         if "github.com" in check_domain: platform = "github"
         elif "gitlab.com" in check_domain: platform = "gitlab"
         elif "gitee.com" in check_domain: platform = "gitee"
+        elif "codeberg.org" in check_domain: platform = "codeberg"
         
         return user, repo, platform, domain, mapped_domain
     return None, None, None, None, None
