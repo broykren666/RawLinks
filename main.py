@@ -160,20 +160,27 @@ def main():
 
     ui.section("生成报告")
     ui.success(f"生成成功！{gitignore_msg}")
-    print(f"🌍 平台: {platform.capitalize()} | 👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
-    print(f"🔗 有效链接: {processed_count} | 📄 输出文件: {os.path.abspath(output_file)}")
-
+    # print(f"项目平台: 🚀 平台:{platform.capitalize()} | 👤 用户:{user}")
+    # print(f"仓库信息: 📦 仓库:{repo} | 🌿 分支:{branch}")
+    # print(f"统计摘要: 📄 文件:{total_files} | 🔗 链接: {processed_count} | ⛓️‍💥 过滤: {total_files - processed_count}")
+    # print(f"输出文件: {os.path.abspath(output_file)}")
+    
+    print(f"项目平台: 平台:{platform.capitalize()} | 用户:{user}")
+    print(f"仓库信息: 仓库:{repo} | 分支:{branch}")
+    print(f"统计摘要: 文件:{total_files} | 链接: {processed_count} | 过滤: {total_files - processed_count}")
+    print(f"输出文件: {os.path.abspath(output_file)}")
+    
     # 自动打开项目目录
-    try:
-        project_dir = os.getcwd()
-        if sys.platform == "win32":
-            os.startfile(project_dir)
-        elif sys.platform == "darwin":
-            subprocess.run(["open", project_dir])
-        else:
-            subprocess.run(["xdg-open", project_dir])
-    except:
-        pass
+    # try:
+    #     project_dir = os.getcwd()
+    #     if sys.platform == "win32":
+    #         os.startfile(project_dir)
+    #     elif sys.platform == "darwin":
+    #         subprocess.run(["open", project_dir])
+    #     else:
+    #         subprocess.run(["xdg-open", project_dir])
+    # except:
+    #     pass
 
 if __name__ == "__main__":
     try:
