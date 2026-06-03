@@ -131,27 +131,44 @@ def main():
     )
 
     # --- 保存 ---
-    links_dir = os.path.join(script_dir, "links")
-    os.makedirs(links_dir, exist_ok=True)
-    safe_branch = branch.replace("/", "_").replace("\\", "_")
-    output_file = os.path.join(links_dir, f"{repo}_{safe_branch}.md")
+    output_file = "link.md"
     
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(md_content)
 
+    # 自动把link.md追加到项目路径下的忽略文件中
+    gitignore_path = ".gitignore"
+    try:
+        if os.path.exists(gitignore_path):
+            with open(gitignore_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                lines = content.splitlines()
+            if "link.md" not in lines:
+                with open(gitignore_path, "a", encoding="utf-8") as f:
+                    # 如果内容不为空且不以换行符结尾，先加一个换行符
+                    if content and not content.endswith('\n'):
+                        f.write("\n")
+                    f.write("link.md\n")
+        else:
+            with open(gitignore_path, "w", encoding="utf-8") as f:
+                f.write("link.md\n")
+    except Exception as e:
+        ui.warning(f"无法更新 .gitignore: {e}")
+
     ui.section("生成报告")
     ui.success("生成成功！")
     print(f"🌍 平台: {platform.capitalize()} | 👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
-    print(f"🔗 有效链接: {processed_count} | 📄 输出文件: {output_file}")
+    print(f"🔗 有效链接: {processed_count} | 📄 输出文件: {os.path.abspath(output_file)}")
 
-    # 自动打开目录
+    # 自动打开项目目录
     try:
+        project_dir = os.getcwd()
         if sys.platform == "win32":
-            os.startfile(links_dir)
+            os.startfile(project_dir)
         elif sys.platform == "darwin":
-            subprocess.run(["open", links_dir])
+            subprocess.run(["open", project_dir])
         else:
-            subprocess.run(["xdg-open", links_dir])
+            subprocess.run(["xdg-open", project_dir])
     except:
         pass
 
