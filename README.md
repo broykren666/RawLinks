@@ -70,38 +70,6 @@ python main.py
 
 ---
 
-## 📁 目录结构
-
-```text
-.
-├── main.py            # 主逻辑脚本
-├── config.json        # 配置文件 (图标、过滤、主机)
-└── links/             # 自动生成的 Markdown 文件存放目录
-    ├── MyRepo.md
-    └── AnotherRepo.md
-```
-
----
-
-## 📄 输出示例
-
-生成的 Markdown 文档格式如下：
-
-```markdown
-# 📦 MyRepo Raw Links
-> **User**: `username` | **Branch**: `main` | **Generated**: `2023-10-27 10:30:00`
-
-## 📂 Root
-- 📖 **README.md**
-  `https://raw.githubusercontent.com/user/repo/refs/heads/main/README.md`
-
-## 📂 src/
-- 🐍 **main.py**
-  `https://raw.githubusercontent.com/user/repo/refs/heads/main/src/main.py`
-```
-
----
-
 ## ⚖️ 许可证
 
 根据 MIT 许可证分发。详情请参阅 `LICENSE`。
