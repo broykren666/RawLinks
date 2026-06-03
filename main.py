@@ -20,7 +20,7 @@ def main():
 
     # --- 路径识别 ---
     ui.section("路径选择")
-    path = input("请输入 Git 项目路径 (回车表示当前目录): ").strip() or "."
+    path = input("请输入 Git 项目路径: ").strip() or "."
     if not os.path.exists(os.path.join(path, ".git")):
         ui.error("该目录不是 Git 仓库。")
         return
