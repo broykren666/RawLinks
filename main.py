@@ -138,6 +138,7 @@ def main():
 
     # 自动把link.md追加到项目路径下的忽略文件中
     gitignore_path = ".gitignore"
+    gitignore_msg = ""
     try:
         if os.path.exists(gitignore_path):
             with open(gitignore_path, "r", encoding="utf-8") as f:
@@ -149,14 +150,16 @@ def main():
                     if content and not content.endswith('\n'):
                         f.write("\n")
                     f.write("link.md\n")
+                gitignore_msg = " (已更新 .gitignore)"
         else:
             with open(gitignore_path, "w", encoding="utf-8") as f:
                 f.write("link.md\n")
+            gitignore_msg = " (已创建 .gitignore 并添加忽略)"
     except Exception as e:
         ui.warning(f"无法更新 .gitignore: {e}")
 
     ui.section("生成报告")
-    ui.success("生成成功！")
+    ui.success(f"生成成功！{gitignore_msg}")
     print(f"🌍 平台: {platform.capitalize()} | 👤 用户: {user} | 📦 仓库: {repo} | 🌿 分支: {branch}")
     print(f"🔗 有效链接: {processed_count} | 📄 输出文件: {os.path.abspath(output_file)}")
 
