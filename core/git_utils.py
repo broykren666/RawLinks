@@ -4,9 +4,21 @@ import re
 def run_command(cmd):
     """执行终端命令并返回输出字符串"""
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return result.stdout.strip()
-    except:
+        # 1. 显式指定编码为 utf-8，并处理解码错误，防止在 Windows 等环境下出现 UnicodeDecodeError
+        # 2. 移除 check=True，手动处理返回码以获得更多信息
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            encoding="utf-8", 
+            errors="replace", 
+            check=False
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+        return None
+    except Exception:
+        # 极少数情况下（如命令不存在）会抛出异常
         return None
 
 def check_git_installed():
