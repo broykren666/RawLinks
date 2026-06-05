@@ -6,8 +6,8 @@ class ConfigManager:
         self.config_path = os.path.join(script_dir, "config.json")
         self.default_config = {
             "host_map": [
-                {"host": "dudu", "user": "xinjieming", "domain": "github.com"},
-                {"host": "yoyo", "user": "donghaiyan", "domain": "gitlab.com"}
+                {"host": "work", "user": "user_work", "domain": "github.com"},
+                {"host": "home", "user": "user_home", "domain": "gitlab.com"}
             ],
             "filters": {
                 "ignore_dirs": ["node_modules", "__pycache__", "dist", "build", "target", ".git", ".idea", ".vscode", "venv", ".venv", "wheels", ".wrangler"],
